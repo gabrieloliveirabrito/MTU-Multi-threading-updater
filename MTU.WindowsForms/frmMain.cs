@@ -33,7 +33,7 @@ namespace MTU.WindowsForms
             errorMessage += "{1}" + Environment.NewLine;
             errorMessage += "------------------------------------";
 
-            updater = new MTUpdater("http://localhost/ver.xml");
+            updater = new MTUpdater("http://192.168.1.101/MTU/ver.xml");
             updater.Started += Updater_Started;
             updater.Failed += Updater_Failed;
             updater.Finished += Updater_Finished;

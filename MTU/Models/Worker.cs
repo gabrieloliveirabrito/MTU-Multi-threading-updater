@@ -12,13 +12,14 @@ namespace MTU.Models
     {
         public string Name { get; private set; }
         public WorkerType Type { get; private set; }
-        public WebClient Client { get; private set; }
+        public object RealWorker { get; private set; }
+        public object State { get; set; }
 
-        public Worker(string name, WorkerType type, WebClient client)
+        public Worker(string name, WorkerType type, object rWorker)
         {
             Name = name;
             Type = type;
-            Client = client;
+            RealWorker = rWorker;
         }
     }
 }

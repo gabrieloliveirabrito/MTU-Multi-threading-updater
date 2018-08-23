@@ -7,3 +7,11 @@ D:\Projetos\Multi-threading Updater\MTU.Updater\obj\Debug\MTU.Updater.csproj.Cor
 D:\Projetos\Multi-threading Updater\MTU.Updater\obj\Debug\MTU.Updater.csproj.CopyComplete
 D:\Projetos\Multi-threading Updater\MTU.Updater\obj\Debug\MTU.Updater.dll
 D:\Projetos\Multi-threading Updater\MTU.Updater\obj\Debug\MTU.Updater.pdb
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.Updater\bin\Debug\MTU.Updater.dll
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.Updater\bin\Debug\MTU.Updater.pdb
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.Updater\bin\Debug\MTU.dll
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.Updater\bin\Debug\MTU.pdb
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.Updater\obj\Debug\MTU.Updater.csprojResolveAssemblyReference.cache
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.Updater\obj\Debug\MTU.Updater.csproj.CoreCompileInputs.cache
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.Updater\obj\Debug\MTU.Updater.dll
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.Updater\obj\Debug\MTU.Updater.pdb

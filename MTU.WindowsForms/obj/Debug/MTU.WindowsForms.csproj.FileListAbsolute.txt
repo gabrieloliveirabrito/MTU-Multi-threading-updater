@@ -13,3 +13,17 @@ D:\Projetos\Multi-threading Updater\MTU.WindowsForms\bin\Debug\MTU.Updater.dll
 D:\Projetos\Multi-threading Updater\MTU.WindowsForms\bin\Debug\MTU.Updater.pdb
 D:\Projetos\Multi-threading Updater\MTU.WindowsForms\bin\Debug\MTU.pdb
 D:\Projetos\Multi-threading Updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.csproj.CopyComplete
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\bin\Debug\MTU.WindowsForms.exe.config
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\bin\Debug\MTU.WindowsForms.exe
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\bin\Debug\MTU.WindowsForms.pdb
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\bin\Debug\MTU.dll
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\bin\Debug\MTU.Updater.dll
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\bin\Debug\MTU.Updater.pdb
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\bin\Debug\MTU.pdb
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.csprojResolveAssemblyReference.cache
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.frmMain.resources
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.Properties.Resources.resources
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.csproj.GenerateResource.Cache
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.csproj.CoreCompileInputs.cache
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.exe
+C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.pdb

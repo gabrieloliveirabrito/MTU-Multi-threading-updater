@@ -49,6 +49,7 @@
     <Compile Include="Args\WorkerAppendEventArgs.cs" />
     <Compile Include="Enums\UpdaterState.cs" />
     <Compile Include="Enums\WorkerType.cs" />
+    <Compile Include="Models\Update.cs" />
     <Compile Include="Models\Worker.cs" />
     <Compile Include="MTUConstants.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
