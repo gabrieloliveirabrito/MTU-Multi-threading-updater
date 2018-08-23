@@ -1,0 +1,9 @@
+D:\Projetos\Multi-threading Updater\MTU.Updater\bin\Debug\MTU.Updater.dll
+D:\Projetos\Multi-threading Updater\MTU.Updater\bin\Debug\MTU.Updater.pdb
+D:\Projetos\Multi-threading Updater\MTU.Updater\bin\Debug\MTU.dll
+D:\Projetos\Multi-threading Updater\MTU.Updater\bin\Debug\MTU.pdb
+D:\Projetos\Multi-threading Updater\MTU.Updater\obj\Debug\MTU.Updater.csprojAssemblyReference.cache
+D:\Projetos\Multi-threading Updater\MTU.Updater\obj\Debug\MTU.Updater.csproj.CoreCompileInputs.cache
+D:\Projetos\Multi-threading Updater\MTU.Updater\obj\Debug\MTU.Updater.csproj.CopyComplete
+D:\Projetos\Multi-threading Updater\MTU.Updater\obj\Debug\MTU.Updater.dll
+D:\Projetos\Multi-threading Updater\MTU.Updater\obj\Debug\MTU.Updater.pdb

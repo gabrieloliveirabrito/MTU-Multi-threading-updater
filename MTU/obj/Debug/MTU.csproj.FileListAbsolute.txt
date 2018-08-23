@@ -1,0 +1,6 @@
+D:\Projetos\Multi-threading Updater\MTU\bin\Debug\MTU.dll
+D:\Projetos\Multi-threading Updater\MTU\bin\Debug\MTU.pdb
+D:\Projetos\Multi-threading Updater\MTU\obj\Debug\MTU.csprojAssemblyReference.cache
+D:\Projetos\Multi-threading Updater\MTU\obj\Debug\MTU.csproj.CoreCompileInputs.cache
+D:\Projetos\Multi-threading Updater\MTU\obj\Debug\MTU.dll
+D:\Projetos\Multi-threading Updater\MTU\obj\Debug\MTU.pdb
