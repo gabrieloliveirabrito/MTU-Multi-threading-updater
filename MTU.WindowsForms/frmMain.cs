@@ -33,7 +33,9 @@ namespace MTU.WindowsForms
             errorMessage += "{1}" + Environment.NewLine;
             errorMessage += "------------------------------------";
 
-            updater = new MTUpdater("http://192.168.1.101/MTU/ver.xml");
+            updater = new MTUpdater("http://192.168.1.101/MTU/");
+            updater.BasePath = "Client";
+
             updater.Started += Updater_Started;
             updater.Failed += Updater_Failed;
             updater.Finished += Updater_Finished;
@@ -75,6 +77,12 @@ namespace MTU.WindowsForms
                         break;
                     case UpdaterState.Failed:
                         msg = "Falha no atualizador!";
+                        break;
+                    case UpdaterState.Downloading:
+                        msg = "Baixando atualizações...";
+                        break;
+                    case UpdaterState.Finished:
+                        msg = "Atualizações finalizadas!";
                         break;
                 }
                 label1.Text = msg;
@@ -121,17 +129,25 @@ namespace MTU.WindowsForms
                 e.Retry = DialogResult.Yes == MessageBox.Show(this, failMessage, "Falha", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
         }
 
+        bool msg = false;
         private void Updater_ErrorThrowed(object sender, ErrorEventArgs e)
         {
             if (InvokeRequired)
                 Invoke(new Action<object, ErrorEventArgs>(Updater_ErrorThrowed), sender, e);
-            else
+            else if (!msg)
+            {
+                msg = true;
                 MessageBox.Show(this, string.Format(errorMessage, e.Error.Message, e.Error.StackTrace), "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                msg = false;
+            }
         }
 
         private void Updater_Finished(object sender, ResultEventArgs e)
         {
-            Environment.Exit(e.Result ? 0 : -1);
+            if (InvokeRequired)
+                Invoke(new Action<object, ResultEventArgs>(Updater_Finished), sender, e);
+            else
+                button1.Enabled = e.Result;
         }
     }
 }

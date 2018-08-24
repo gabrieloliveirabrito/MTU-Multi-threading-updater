@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Comparers\UpdateComparer.cs" />
+    <Compile Include="MTUGenerator.cs" />
     <Compile Include="MTUpdater.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

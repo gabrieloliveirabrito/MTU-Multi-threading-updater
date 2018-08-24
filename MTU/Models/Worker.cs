@@ -14,12 +14,14 @@ namespace MTU.Models
         public WorkerType Type { get; private set; }
         public object RealWorker { get; private set; }
         public object State { get; set; }
+        public bool Running { get; set; }
 
         public Worker(string name, WorkerType type, object rWorker)
         {
             Name = name;
             Type = type;
             RealWorker = rWorker;
+            Running = false;
         }
     }
 }

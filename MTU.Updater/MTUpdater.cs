@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Xml;
 using System.Threading;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 
@@ -18,8 +19,7 @@ namespace MTU.Updater
     public class MTUpdater : IDisposable
     {
         Dictionary<string, Worker> clients;
-        List<Update> verificationList;
-        HashSet<Update> downloadQueue;
+        List<Update> verificationList, downloadCache;
 
         bool result = false;
         int current = 0, total = 0;
@@ -57,9 +57,10 @@ namespace MTU.Updater
             }
         }
 
-        public string XMLLink { get; set; }
+        public string XmlPath { get; set; }
+        public string BaseLink { get; set; }
         public string BasePath { get; set; }
-        public HashAlgorithm Algorithm { get; set; }
+        public Func<HashAlgorithm> Algorithm { get; set; }
         public Func<Stream, string> HashFunction { get; set; }
 
         public int CurrentUpdate
@@ -75,16 +76,17 @@ namespace MTU.Updater
         public MTUpdater()
         {
             clients = new Dictionary<string, Worker>();
-            downloadQueue = new HashSet<Update>(new UpdateComparer());
+            downloadCache = new List<Update>();
             verificationList = new List<Update>();
 
-            Algorithm = MD5.Create();
+            Algorithm = new Func<HashAlgorithm>(() => MD5.Create());
             HashFunction = BaseHashing;
+            XmlPath = "ver.xml";
         }
 
-        public MTUpdater(string xmlLink) : this()
+        public MTUpdater(string baseLink) : this()
         {
-            XMLLink = xmlLink;
+            BaseLink = baseLink;
         }
 
         public void Dispose()
@@ -99,10 +101,11 @@ namespace MTU.Updater
 
         string BaseHashing(Stream s)
         {
-            Algorithm.Clear();
-            var buf = Algorithm.ComputeHash(s);
-
-            return BitConverter.ToString(buf).Replace("-", string.Empty);
+            using (var algo = Algorithm())
+            {
+                var buf = algo.ComputeHash(s);
+                return BitConverter.ToString(buf).Replace("-", string.Empty);
+            }
         }
 
         bool IsPrime(int n)
@@ -198,14 +201,16 @@ namespace MTU.Updater
             try
             {
                 verificationList.Clear();
-                downloadQueue.Clear();
+                downloadCache.Clear();
 
                 State = UpdaterState.Started;
                 Dispose();
 
                 var worker = CreateClient("ListChecker", WorkerType.Verificate);
+                worker.Running = true;
+
                 (worker.RealWorker as WebClient).DownloadDataCompleted += Client_DownloadDataCompleted;
-                (worker.RealWorker as WebClient).DownloadDataAsync(new Uri(XMLLink), worker);
+                (worker.RealWorker as WebClient).DownloadDataAsync(new Uri(new Uri(BaseLink), XmlPath), worker);
                 State = UpdaterState.DownloadingVerification;
             }
             catch (Exception ex)
@@ -222,6 +227,7 @@ namespace MTU.Updater
             try
             {
                 var cliWorker = e.UserState as Worker;
+                cliWorker.Running = false;
                 UpdateWorkerProgress(cliWorker, 100);
 
                 if (e.Cancelled && InvokeFailed())
@@ -234,7 +240,7 @@ namespace MTU.Updater
                 }
                 else
                 {
-                    State = UpdaterState.CheckingFiles;
+                    State = UpdaterState.ParsingList;
 
                     using (var stream = new MemoryStream(e.Result))
                     using (var reader = new XmlTextReader(stream))
@@ -245,7 +251,7 @@ namespace MTU.Updater
                         foreach (XmlNode node in doc.DocumentElement.GetElementsByTagName("Update"))
                         {
                             var update = new Update();
-                            update.Filename = node.Attributes["Filename"].Value;
+                            update.Filename = node.Attributes["Path"].Value;
                             update.Hash = node.Attributes["Hash"].Value;
                             update.Size = Convert.ToInt64(node.Attributes["Size"].Value);
 
@@ -269,7 +275,12 @@ namespace MTU.Updater
                             var thread = threads[i] = new Thread(new ParameterizedThreadStart(HandleVerification));
                             var worker = CreateWorker(string.Format("Verificator {0}", i + 1), WorkerType.Verificate, thread);
                             worker.State = packed;
+                        }
 
+                        State = UpdaterState.CheckingFiles;
+                        for(int i = 0; i < threads.Length; i++)
+                        {
+                            var worker = clients.Values.Skip(1 + i).First();
                             threads[i].Start(worker);
                         }
                     }
@@ -283,14 +294,23 @@ namespace MTU.Updater
             }
         }
 
-        private void HandleVerification(object state)
+        string GetBasePath()
         {
-            var worker = state as Worker;
-            var updates = worker.State as IEnumerable<Update>;
-
             var path = Environment.CurrentDirectory;
             if (!string.IsNullOrEmpty(BasePath))
                 path = Path.Combine(path, BasePath);
+            return path;
+        }
+
+        private void HandleVerification(object state)
+        {
+            while (State != UpdaterState.CheckingFiles)
+                Thread.Sleep(100);
+
+            var worker = state as Worker;
+            var updates = worker.State as IEnumerable<Update>;
+
+            var path = GetBasePath();
             var hpath = Path.Combine(path, "Hashes");
 
             var current = 0;
@@ -298,20 +318,21 @@ namespace MTU.Updater
 
             foreach(var update in updates)
             {
-                var filename = Path.Combine(path, update.Filename);
+                var filename = update.RealFilename = Path.Combine(path, update.Filename);
 
                 if (Path.GetExtension(filename) == ".hash")
                 {
-                    var from = verificationList.FirstOrDefault(u => u.Filename == update.Filename.Replace(".hash", string.Empty));
+                    var from = verificationList.FirstOrDefault(u => u.Filename == update.Filename.Substring(("Hashes" + Path.DirectorySeparatorChar).Length).Replace(".hash", string.Empty));
                     var fromF = Path.Combine(path, from.Filename);
 
+                    from.RealFilename = fromF;
                     if (!File.Exists(filename) || !File.Exists(fromF))
-                        downloadQueue.Add(update);
+                        EnqueueUpdate(from, filename);
                     else
                     {
                         using (var stream = File.OpenRead(filename))
                             if (update.Hash != HashFunction(stream))
-                                downloadQueue.Add(update);
+                                EnqueueUpdate(from, filename);
                     }
                 }
                 else
@@ -319,13 +340,103 @@ namespace MTU.Updater
                     var hashF = string.Concat(filename.Replace(path, hpath), ".hash");
 
                     if (!File.Exists(filename) || !File.Exists(hashF))
-                        downloadQueue.Add(update);
+                        EnqueueUpdate(update, filename);
+                    else
+                    {
+                        var hash = File.ReadAllText(hashF);
+                        if (hash != update.Hash)
+                            EnqueueUpdate(update, filename);
+                    }
                 }
 
                 current++;
                 UpdateWorkerProgress(worker, (current * 100) / total);
             }
+
+            worker.Running = false;
+
+
+            if (!clients.Values.Any(w => w.Type == WorkerType.Verificate && w.Running))
+            {
+                if (!clients.Values.Any(w => w.Type == WorkerType.Update))
+                {
+                    result = true;
+                    State = UpdaterState.Finished;
+                }
+                else
+                    State = UpdaterState.Downloading;
+            }
             UpdateWorkerProgress(worker, 100);
+        }
+
+
+
+        void EnqueueUpdate(Update update, string filename)
+        {
+            lock (downloadCache)
+            {
+                if (!clients.ContainsKey(update.Filename))
+                {
+                    downloadCache.Add(update);
+
+                    if (update.Filename.EndsWith("SD.WindowsForms.exe"))
+                        Console.WriteLine("X");
+
+                    var dp = Path.GetDirectoryName(update.RealFilename);
+                    if (!Directory.Exists(dp))
+                        Directory.CreateDirectory(dp);
+
+                    var worker = CreateClient(update.Filename, WorkerType.Update);
+                    worker.Running = true;
+                    worker.State = update;
+
+                    var client = worker.RealWorker as WebClient;
+                    client.DownloadFileCompleted += Client_DownloadFileCompleted;
+                    client.DownloadFileAsync(new Uri(new Uri(BaseLink), update.Filename), update.RealFilename, worker);
+                }
+            }
+        }
+
+        private void Client_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
+        {
+            var worker = e.UserState as Worker;
+            var update = worker.State as Update;
+            var path = GetBasePath();
+            var hpath = Path.Combine(path, "Hashes");
+            worker.Running = false;
+
+            lock (downloadCache)
+                downloadCache.Remove(update);
+
+            UpdateWorkerProgress(worker, 100);
+
+            if (e.Cancelled && InvokeFailed())
+                EnqueueUpdate(update, update.RealFilename);
+            else if (e.Error != null)
+            {
+                InvokeError(e.Error);
+                if (InvokeFailed())
+                    EnqueueUpdate(update, update.RealFilename);
+            }
+            else
+            {
+                var hp = string.Concat(Path.Combine(hpath, update.Filename), ".hash");
+                var dp = Path.GetDirectoryName(hp);
+
+                if (!Directory.Exists(dp))
+                    Directory.CreateDirectory(dp);
+
+                using (var fs = File.CreateText(hp))
+                {
+                    fs.Write(update.Hash);
+                }
+
+                if (!clients.Values.Any(w => w.Running))
+                {
+                    result = true;
+                    State = UpdaterState.Finished;
+                }
+            }
         }
     }
 }

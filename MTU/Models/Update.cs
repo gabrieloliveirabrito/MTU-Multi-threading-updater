@@ -8,6 +8,8 @@ namespace MTU.Models
     public class Update
     {
         public string Filename { get; set; }
+        public string RealFilename { get; set; }
+
         public string Hash { get; set; }
         public long Size { get; set; }
     }
