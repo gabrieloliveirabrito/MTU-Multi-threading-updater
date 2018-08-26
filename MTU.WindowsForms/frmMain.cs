@@ -22,6 +22,7 @@ namespace MTU.WindowsForms
         public frmMain()
         {
             InitializeComponent();
+
             failMessage = "Falha ao atualizar o sistema!" + Environment.NewLine;
             failMessage += "Clique em Sim para tentar novamente" + Environment.NewLine;
             failMessage += "Clique em Não para sair do atualizador";
@@ -33,7 +34,7 @@ namespace MTU.WindowsForms
             errorMessage += "{1}" + Environment.NewLine;
             errorMessage += "------------------------------------";
 
-            updater = new MTUpdater("http://192.168.1.101/MTU/");
+            updater = new MTUpdater("http://127.0.0.1/MTU/");
             updater.BasePath = "Client";
 
             updater.Started += Updater_Started;
@@ -43,6 +44,16 @@ namespace MTU.WindowsForms
             updater.StateChanged += Updater_StateChanged;
             updater.WorkerAppend += Updater_WorkerAppend;
             updater.WorkerProgress += Updater_WorkerProgress;
+            updater.CurrentChanged += Updater_CTChanged;
+            updater.TotalChanged += Updater_CTChanged;
+        }
+
+        private void Updater_CTChanged(object sender, EventArgs e)
+        {
+            if (InvokeRequired)
+                Invoke(new Action<object, EventArgs>(Updater_CTChanged), sender, e);
+            else
+                lblUpdateStatus.Text = string.Format(lblUpdateStatus.Tag.ToString(), updater.CurrentUpdate, updater.TotalUpdates);
         }
 
         bool init = false;
@@ -64,7 +75,7 @@ namespace MTU.WindowsForms
         {
             if (InvokeRequired)
                 Invoke(new Action<object, StateEventArgs>(Updater_StateChanged), sender, e);
-            else
+            else if (!Disposing && !IsDisposed)
             {
                 var msg = string.Empty;
                 switch (e.State)
@@ -85,7 +96,7 @@ namespace MTU.WindowsForms
                         msg = "Atualizações finalizadas!";
                         break;
                 }
-                label1.Text = msg;
+                lblStatus.Text = msg;
             }
         }
 
@@ -93,12 +104,16 @@ namespace MTU.WindowsForms
         {
             if (InvokeRequired)
                 Invoke(new Action<object, WorkerAppendEventArgs>(Updater_WorkerAppend), sender, e);
-            else
+            else if (!Disposing && !IsDisposed)
             {
-                var item = (e.Type == WorkerType.Update ? listView2.Items : listView1.Items).Add(e.Name);
+                var lv = (e.Type == WorkerType.Update ? lvUpdates : lvWorkers);
+
+                //lv.BeginUpdate();
+                var item = lv.Items.Add(e.Name);
                 item.Name = e.Name;
 
                 item.SubItems.Add("0%");
+                //lv.EndUpdate();
             }
         }
 
@@ -106,10 +121,21 @@ namespace MTU.WindowsForms
         {
             if (InvokeRequired)
                 Invoke(new Action<object, ProgressEventArgs>(Updater_WorkerProgress), sender, e);
-            else
+            else if (!Disposing && !IsDisposed)
             {
-                var item = (e.Type == WorkerType.Update ? listView2.Items : listView1.Items)[e.Name];
-                item.SubItems[1].Text = string.Format("{0}%", e.Progress);
+                var lv = (e.Type == WorkerType.Update ? lvUpdates : lvWorkers);
+
+                //lv.BeginUpdate();
+
+                if (lv.Items.ContainsKey(e.Name))
+                {
+                    var item = lv.Items[e.Name];
+                    item.SubItems[1].Text = string.Format("{0}%", e.Progress);
+
+                    if (e.Type == WorkerType.Update && e.Progress == 100)
+                        lv.Items.Remove(item);
+                }
+                //lv.EndUpdate();
             }
         }
 
@@ -118,14 +144,14 @@ namespace MTU.WindowsForms
             if (InvokeRequired)
                 Invoke(new Action<object, EventArgs>(Updater_Started), sender, e);
             else
-                label1.Text = "Atualizador iniciado!";
+                lblStatus.Text = "Atualizador iniciado!";
         }
 
         private void Updater_Failed(object sender, RetryEventArgs e)
         {
             if (InvokeRequired)
                 Invoke(new Action<object, RetryEventArgs>(Updater_Failed), sender, e);
-            else
+            else if (!Disposing && !IsDisposed)
                 e.Retry = DialogResult.Yes == MessageBox.Show(this, failMessage, "Falha", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
         }
 
@@ -146,8 +172,8 @@ namespace MTU.WindowsForms
         {
             if (InvokeRequired)
                 Invoke(new Action<object, ResultEventArgs>(Updater_Finished), sender, e);
-            else
-                button1.Enabled = e.Result;
+            else if (!Disposing && !IsDisposed)
+                btnPlay.Enabled = e.Result;
         }
     }
 }

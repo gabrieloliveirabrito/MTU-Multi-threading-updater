@@ -83,6 +83,8 @@ namespace MTU.Updater
                 var root = doc.AppendChild(doc.CreateElement("root"));
                 foreach (var file in files)
                 {
+                    Console.Write("Creating node to file {0}....", Path.GetFileName(file));
+
                     var hash = CreateNode(doc, path, file);
                     var hfp = string.Concat(file.Replace(path, hp), ".hash");
                     var hdp = Path.GetDirectoryName(hfp);
@@ -92,6 +94,8 @@ namespace MTU.Updater
                     using (var hs = File.CreateText(hfp))
                         hs.Write(hash);
                     CreateNode(doc, path, hfp);
+
+                    Console.WriteLine("SUCCESS!");
                 }
 
                 if (File.Exists(filename))

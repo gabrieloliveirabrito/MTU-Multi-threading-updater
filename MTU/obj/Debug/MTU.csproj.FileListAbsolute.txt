@@ -10,3 +10,9 @@ C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU\obj\De
 C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU\obj\Debug\MTU.csproj.CoreCompileInputs.cache
 C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU\obj\Debug\MTU.dll
 C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU\obj\Debug\MTU.pdb
+D:\Projetos\MTU-Multi-threading-updater\MTU\bin\Debug\MTU.dll
+D:\Projetos\MTU-Multi-threading-updater\MTU\bin\Debug\MTU.pdb
+D:\Projetos\MTU-Multi-threading-updater\MTU\obj\Debug\MTU.csprojAssemblyReference.cache
+D:\Projetos\MTU-Multi-threading-updater\MTU\obj\Debug\MTU.csproj.CoreCompileInputs.cache
+D:\Projetos\MTU-Multi-threading-updater\MTU\obj\Debug\MTU.dll
+D:\Projetos\MTU-Multi-threading-updater\MTU\obj\Debug\MTU.pdb

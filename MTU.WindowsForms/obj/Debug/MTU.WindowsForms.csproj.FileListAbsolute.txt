@@ -27,3 +27,18 @@ C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.Window
 C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.csproj.CoreCompileInputs.cache
 C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.exe
 C:\Users\Adminstrador TI\Documents\GitHub\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.pdb
+D:\Projetos\MTU-Multi-threading-updater\MTU.WindowsForms\bin\Debug\MTU.WindowsForms.exe.config
+D:\Projetos\MTU-Multi-threading-updater\MTU.WindowsForms\bin\Debug\MTU.WindowsForms.exe
+D:\Projetos\MTU-Multi-threading-updater\MTU.WindowsForms\bin\Debug\MTU.WindowsForms.pdb
+D:\Projetos\MTU-Multi-threading-updater\MTU.WindowsForms\bin\Debug\MTU.dll
+D:\Projetos\MTU-Multi-threading-updater\MTU.WindowsForms\bin\Debug\MTU.Updater.dll
+D:\Projetos\MTU-Multi-threading-updater\MTU.WindowsForms\bin\Debug\MTU.Updater.pdb
+D:\Projetos\MTU-Multi-threading-updater\MTU.WindowsForms\bin\Debug\MTU.pdb
+D:\Projetos\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.csprojAssemblyReference.cache
+D:\Projetos\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.frmMain.resources
+D:\Projetos\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.Properties.Resources.resources
+D:\Projetos\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.csproj.GenerateResource.cache
+D:\Projetos\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.csproj.CoreCompileInputs.cache
+D:\Projetos\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.csproj.CopyComplete
+D:\Projetos\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.exe
+D:\Projetos\MTU-Multi-threading-updater\MTU.WindowsForms\obj\Debug\MTU.WindowsForms.pdb

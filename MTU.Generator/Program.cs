@@ -12,7 +12,7 @@ namespace MTU.Generator
     {
         static void Main(string[] args)
         {
-            var generator = new MTUGenerator(@"S:\html\MTU\");
+            var generator = new MTUGenerator(Path.Combine(Environment.CurrentDirectory, "Client"));
 
             if (generator.Generate(Path.Combine(Environment.CurrentDirectory, "ver.xml")))
                 Console.WriteLine("XML generated successfully!");

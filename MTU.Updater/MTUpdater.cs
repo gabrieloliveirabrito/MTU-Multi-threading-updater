@@ -19,12 +19,14 @@ namespace MTU.Updater
     public class MTUpdater : IDisposable
     {
         Dictionary<string, Worker> clients;
+        Queue<Worker> downloadQueue;
         List<Update> verificationList, downloadCache;
 
         bool result = false;
         int current = 0, total = 0;
+        readonly object syncLock = new object();
 
-        public event EventHandler Started;
+        public event EventHandler Started, CurrentChanged, TotalChanged;
         public event EventHandler<ResultEventArgs> Finished;
         public event EventHandler<RetryEventArgs> Failed;
         public event EventHandler<ErrorEventArgs> ErrorThrowed;
@@ -65,12 +67,36 @@ namespace MTU.Updater
 
         public int CurrentUpdate
         {
-            get { return current; }
+            get
+            {
+                lock (syncLock)
+                    return current;
+            }
+            private set
+            {
+                lock (syncLock)
+                    current = value;
+
+                if (CurrentChanged != null)
+                    CurrentChanged(this, EventArgs.Empty);
+            }
         }
 
         public int TotalUpdates
         {
-            get { return total; }
+            get
+            {
+                lock (syncLock)
+                    return total;
+            }
+            set
+            {
+                lock (syncLock)
+                    total = value;
+
+                if (TotalChanged != null)
+                    TotalChanged(this, EventArgs.Empty);
+            }
         }
 
         public MTUpdater()
@@ -78,6 +104,7 @@ namespace MTU.Updater
             clients = new Dictionary<string, Worker>();
             downloadCache = new List<Update>();
             verificationList = new List<Update>();
+            downloadQueue = new Queue<Worker>();
 
             Algorithm = new Func<HashAlgorithm>(() => MD5.Create());
             HashFunction = BaseHashing;
@@ -96,6 +123,7 @@ namespace MTU.Updater
                     (client.RealWorker as WebClient).Dispose();
                 else if (client.RealWorker is Thread)
                     (client.RealWorker as Thread).Interrupt();
+
             clients.Clear();
         }
 
@@ -276,11 +304,18 @@ namespace MTU.Updater
                             var worker = CreateWorker(string.Format("Verificator {0}", i + 1), WorkerType.Verificate, thread);
                             worker.State = packed;
                         }
-
                         State = UpdaterState.CheckingFiles;
+
+                        var downloadQueuer = new Thread(DownloadQueuer);
+                        var dWorker = CreateWorker("DownloadQueuer", WorkerType.Verificate, downloadQueuer);
+                        dWorker.Running = true;
+                        downloadQueuer.Start(dWorker);
+
                         for(int i = 0; i < threads.Length; i++)
                         {
                             var worker = clients.Values.Skip(1 + i).First();
+                            worker.Running = true;
+
                             threads[i].Start(worker);
                         }
                     }
@@ -294,6 +329,74 @@ namespace MTU.Updater
             }
         }
 
+        void DownloadQueuer(object state)
+        {
+            var dWorker = state as Worker;
+            while(State == UpdaterState.CheckingFiles || State == UpdaterState.Downloading)
+            {
+                int count = 0;
+                lock (clients)
+                    count = clients.Values.Count(w => w.Type == WorkerType.Update && w.Running && (w.RealWorker as WebClient).IsBusy);
+                
+                Worker worker = null;
+                bool has = false;
+                lock (downloadQueue)
+                {
+                    has = downloadQueue.Count > 0;
+
+                    if (has && count <= MTUConstants.MaximumDownloads)
+                        worker = downloadQueue.Dequeue();
+                }
+
+                if (count <= MTUConstants.MaximumDownloads && has)
+                {
+                    UpdateWorkerProgress(dWorker, (CurrentUpdate * 100) / TotalUpdates);
+
+                    var client = worker.RealWorker as WebClient;
+                    var update = worker.State as Update;
+
+                    client.DownloadFileAsync(new Uri(new Uri(BaseLink), update.Filename), update.RealFilename, worker);
+                }
+
+                Thread.Sleep(MTUConstants.DownloadQueuerDelay);
+            }
+
+            UpdateWorkerProgress(dWorker, 100);
+            dWorker.Running = false;
+        }
+
+        void EnqueueUpdate(Update update, string filename)
+        {
+            lock (clients)
+            {
+                if (!clients.ContainsKey(update.Filename))
+                {
+                    lock (downloadCache)
+                    {
+                        downloadCache.Add(update);
+
+                        TotalUpdates++;
+                        if (update.Filename.EndsWith("SD.WindowsForms.exe"))
+                            Console.WriteLine("X");
+
+                        var dp = Path.GetDirectoryName(update.RealFilename);
+                        if (!Directory.Exists(dp))
+                            Directory.CreateDirectory(dp);
+
+                        var worker = CreateClient(update.Filename, WorkerType.Update);
+                        worker.State = update;
+                        worker.Running = true;
+
+                        var client = worker.RealWorker as WebClient;
+                        client.DownloadFileCompleted += Client_DownloadFileCompleted;
+
+                        lock (downloadQueue)
+                            downloadQueue.Enqueue(worker);
+                    }
+                }
+            }
+        }
+
         string GetBasePath()
         {
             var path = Environment.CurrentDirectory;
@@ -302,10 +405,22 @@ namespace MTU.Updater
             return path;
         }
 
+        void TryToFinish()
+        {
+            lock (clients)
+            {
+                if (!clients.Where(k => k.Key.StartsWith("Verificator")).Any(w => w.Value.Running) && !clients.Values.Where(w => w.Type == WorkerType.Update).Any(w => w.Running))
+                {
+                    result = true;
+                    State = UpdaterState.Finished;
+                }
+            }
+        }
+
         private void HandleVerification(object state)
         {
             while (State != UpdaterState.CheckingFiles)
-                Thread.Sleep(100);
+                Thread.Sleep(MTUConstants.ParsingWaitDelay);
 
             var worker = state as Worker;
             var updates = worker.State as IEnumerable<Update>;
@@ -316,26 +431,30 @@ namespace MTU.Updater
             var current = 0;
             var total = updates.Count();
 
-            foreach(var update in updates)
+            foreach (var update in updates)
             {
                 var filename = update.RealFilename = Path.Combine(path, update.Filename);
 
                 if (Path.GetExtension(filename) == ".hash")
                 {
                     var from = verificationList.FirstOrDefault(u => u.Filename == update.Filename.Substring(("Hashes" + Path.DirectorySeparatorChar).Length).Replace(".hash", string.Empty));
-                    var fromF = Path.Combine(path, from.Filename);
 
-                    from.RealFilename = fromF;
-                    if (!File.Exists(filename) || !File.Exists(fromF))
-                        EnqueueUpdate(from, filename);
-                    else
+                    if (!downloadCache.Contains(from))
                     {
-                        using (var stream = File.OpenRead(filename))
-                            if (update.Hash != HashFunction(stream))
-                                EnqueueUpdate(from, filename);
+                        var fromF = Path.Combine(path, from.Filename);
+
+                        from.RealFilename = fromF;
+                        if (!File.Exists(filename) || !File.Exists(fromF))
+                            EnqueueUpdate(from, filename);
+                        else
+                        {
+                            using (var stream = File.OpenRead(filename))
+                                if (update.Hash != HashFunction(stream))
+                                    EnqueueUpdate(from, filename);
+                        }
                     }
                 }
-                else
+                else if(!downloadCache.Contains(update))
                 {
                     var hashF = string.Concat(filename.Replace(path, hpath), ".hash");
 
@@ -348,6 +467,7 @@ namespace MTU.Updater
                             EnqueueUpdate(update, filename);
                     }
                 }
+                Thread.Sleep(MTUConstants.VerificationDelay);
 
                 current++;
                 UpdateWorkerProgress(worker, (current * 100) / total);
@@ -355,46 +475,22 @@ namespace MTU.Updater
 
             worker.Running = false;
 
-
-            if (!clients.Values.Any(w => w.Type == WorkerType.Verificate && w.Running))
+            lock (clients)
             {
-                if (!clients.Values.Any(w => w.Type == WorkerType.Update))
+                if (!clients.Values.Any(w => w.Type == WorkerType.Verificate && w.Running))
                 {
-                    result = true;
-                    State = UpdaterState.Finished;
+                    if (!clients.Values.Any(w => w.Type == WorkerType.Update))
+                    {
+                        result = true;
+                        State = UpdaterState.Finished;
+                    }
+                    else
+                        State = UpdaterState.Downloading;
                 }
-                else
-                    State = UpdaterState.Downloading;
             }
             UpdateWorkerProgress(worker, 100);
-        }
 
-
-
-        void EnqueueUpdate(Update update, string filename)
-        {
-            lock (downloadCache)
-            {
-                if (!clients.ContainsKey(update.Filename))
-                {
-                    downloadCache.Add(update);
-
-                    if (update.Filename.EndsWith("SD.WindowsForms.exe"))
-                        Console.WriteLine("X");
-
-                    var dp = Path.GetDirectoryName(update.RealFilename);
-                    if (!Directory.Exists(dp))
-                        Directory.CreateDirectory(dp);
-
-                    var worker = CreateClient(update.Filename, WorkerType.Update);
-                    worker.Running = true;
-                    worker.State = update;
-
-                    var client = worker.RealWorker as WebClient;
-                    client.DownloadFileCompleted += Client_DownloadFileCompleted;
-                    client.DownloadFileAsync(new Uri(new Uri(BaseLink), update.Filename), update.RealFilename, worker);
-                }
-            }
+            TryToFinish();
         }
 
         private void Client_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
@@ -404,9 +500,6 @@ namespace MTU.Updater
             var path = GetBasePath();
             var hpath = Path.Combine(path, "Hashes");
             worker.Running = false;
-
-            lock (downloadCache)
-                downloadCache.Remove(update);
 
             UpdateWorkerProgress(worker, 100);
 
@@ -420,6 +513,8 @@ namespace MTU.Updater
             }
             else
             {
+                CurrentUpdate++;
+
                 var hp = string.Concat(Path.Combine(hpath, update.Filename), ".hash");
                 var dp = Path.GetDirectoryName(hp);
 
@@ -431,11 +526,7 @@ namespace MTU.Updater
                     fs.Write(update.Hash);
                 }
 
-                if (!clients.Values.Any(w => w.Running))
-                {
-                    result = true;
-                    State = UpdaterState.Finished;
-                }
+                TryToFinish();
             }
         }
     }
